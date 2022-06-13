@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP #-}
 module WebAuthn.Types (
   -- * Relying party
   RelyingParty(..)
@@ -79,6 +80,13 @@ import Data.ByteArray (ByteArrayAccess)
 import Data.Aeson (SumEncoding(UntaggedValue))
 import Data.List.NonEmpty
 import Data.Aeson (genericToJSON)
+
+#if MIN_VERSION_aeson(2,0,1)
+import qualified Data.Aeson.Key as K
+fromText = K.fromText
+#else
+fromText = Prelude.id
+#endif
 
 newtype Base64ByteString = Base64ByteString { unBase64ByteString :: ByteString } deriving (Generic, Show, Eq, ByteArrayAccess)
 
@@ -167,7 +175,7 @@ instance ToJSON RelyingParty where
 
 maybeToPair :: Text -> Maybe Base64ByteString -> [Pair]
 maybeToPair _ Nothing = []
-maybeToPair lbl (Just bs) = [lbl .= toJSON bs]
+maybeToPair lbl (Just bs) = [fromText lbl .= toJSON bs]
 
 
 defaultRelyingParty :: Origin -> RelyingParty
